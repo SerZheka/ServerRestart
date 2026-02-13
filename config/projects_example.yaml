@@ -1,0 +1,11 @@
+# Projects for restarting
+
+project1:
+  servers:
+    - 'XX'
+  inputOutput:      # there're links which are implemented both input & output methods for
+    - name: example
+      key: "-"
+  output:           # there're links that're needed only for output
+    - name: test
+      key: "-"

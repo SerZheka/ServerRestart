@@ -1,0 +1,47 @@
+# XX config
+
+ip: "192.168.XX"
+port: "22"
+jboss_port: "9089"
+timeout: 30 # timeout for tsm commands before sessions are started/stopped in X*10 seconds
+server_secret:
+  user: "-"
+  password: "-"
+ofs_secret:
+  user: "-"
+  password: "-"
+tafj_secret:
+  user: "-"
+  password: "-"
+
+scripts:
+  - name: start
+    type: ssh
+    script: ./start.sh
+    message: JBOSS started
+  - name: startTsm
+    type: tsm
+    script: start
+    message: TSM started
+  - name: stop
+    type: ssh
+    script: ./stop.sh
+    message: JBOSS stopped
+  - name: stopTsm
+    type: tsm
+    script: stop
+    message: TSM stopped
+
+commands:
+  - name: restart
+    scripts: [stopTsm, stop, start, startTsm]
+  - name: start
+    scripts: [start, startTsm]
+  - name: start jboss
+    scripts: [start]
+  - name: stop
+    scripts: [stopTsm, stop]
+  - name: start tsm
+    scripts: [startTsm]
+  - name: restart jboss
+    scripts: [stopTsm, stop, start]
