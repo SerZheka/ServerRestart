@@ -1,0 +1,10 @@
+services:
+  serverrestart:
+    build:
+      context: .
+      target: final
+    volumes:
+      - ~/restart_configs:/etc/restart_configs
+    environment:
+      - CONFIG_PATH=/etc/restart_configs
+      - TZ=Europe/Moscow
