@@ -1,5 +1,7 @@
 # Server Restart programm
 
+This programm is designed as unified point for restarting jboss servers on remote environments.
+
 ## Send command from the programm
 
 At present all scripts are located at server, so it's needed to run only 1 command from here. But if it will be needed to run script from here, there're some thoughts.
