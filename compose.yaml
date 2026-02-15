@@ -4,7 +4,7 @@ services:
       context: .
       target: final
     volumes:
-      - ~/restart_configs:/etc/restart_configs
+      - ~/restart_configs:/etc/restart_configs:U
     environment:
       - CONFIG_PATH=/etc/restart_configs
       - TZ=Europe/Moscow
