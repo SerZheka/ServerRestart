@@ -44,24 +44,18 @@ type sessionsResponse struct {
 	Sessions []SessionResponse `json:"sessions"`
 }
 
-func ProcessTsm(command string, address string, timeout int, ofsSecret *config.Secret, tafjSecret *config.Secret, logger *log.Logger) error {
+func ProcessTsm(command, address string, timeout int, ofsSecret, tafjSecret *config.Secret, logger *log.Logger) error {
 	logger.Println("start processing tsm command", command)
 	ofsCommand := "{\"ofsRequest\": \"TSA.SERVICE,/I//0/0," + ofsSecret.User + "/" + ofsSecret.Password + ",TSM,SERVICE.CONTROL="
 	client := http.Client{
 		Timeout: 30 * time.Second,
 	}
-	ofsReq, err := http.NewRequest("POST", "http://"+address+"/TAFJRestServices/resources/ofs", nil)
-	if err != nil {
-		return err
-	}
+	ofsReq, _ := http.NewRequest("POST", "http://"+address+"/TAFJRestServices/resources/ofs", nil)
 	ofsReq.Header.Set("Content-Type", "application/json")
 	ofsReq.SetBasicAuth(tafjSecret.User, tafjSecret.Password)
-
-	sessionsReq, err := http.NewRequest("GET", "http://"+address+"/TAFJRestServices/resources/management/session", nil)
-	if err != nil {
-		return err
-	}
+	sessionsReq, _ := http.NewRequest("GET", "http://"+address+"/TAFJRestServices/resources/management/session", nil)
 	sessionsReq.SetBasicAuth(tafjSecret.User, tafjSecret.Password)
+
 	logger.Println("finished preparation for tsm command")
 
 	if command == "stop" {
@@ -73,11 +67,8 @@ func ProcessTsm(command string, address string, timeout int, ofsSecret *config.S
 			return err
 		}
 		var ofsResp ofsResponse
-		err = json.NewDecoder(res.Body).Decode(&ofsResp)
+		json.NewDecoder(res.Body).Decode(&ofsResp)
 		res.Body.Close()
-		if err != nil {
-			return err
-		}
 		if !(strings.HasPrefix(ofsResp.OfsResponse, "TSM//1") || strings.HasSuffix(ofsResp.OfsResponse, "LIVE RECORD NOT CHANGED")) {
 			return errors.New("error processing ofs: " + ofsResp.OfsResponse)
 		}
@@ -92,7 +83,7 @@ func ProcessTsm(command string, address string, timeout int, ofsSecret *config.S
 			err = json.NewDecoder(res.Body).Decode(&sessionsResp)
 			res.Body.Close()
 			if err != nil {
-				return err
+				return errors.New("error decoding sessions response" + err.Error())
 			}
 
 			if slices.IndexFunc(sessionsResp.Sessions, func(sessn SessionResponse) bool { return sessn.Background }) == -1 {
@@ -113,11 +104,8 @@ func ProcessTsm(command string, address string, timeout int, ofsSecret *config.S
 			return err
 		}
 		var ofsResp ofsResponse
-		err = json.NewDecoder(res.Body).Decode(&ofsResp)
+		json.NewDecoder(res.Body).Decode(&ofsResp)
 		res.Body.Close()
-		if err != nil {
-			return err
-		}
 		if !(strings.HasPrefix(ofsResp.OfsResponse, "TSM//1") || strings.HasSuffix(ofsResp.OfsResponse, "LIVE RECORD NOT CHANGED")) {
 			return errors.New("error processing ofs: " + ofsResp.OfsResponse)
 		}
@@ -126,10 +114,7 @@ func ProcessTsm(command string, address string, timeout int, ofsSecret *config.S
 		data := url.Values{
 			"message": {"START.TSM"},
 		}
-		startTsmReg, err := http.NewRequest("POST", "http://"+address+"/TAFJRestServices/resources/management/topic", bytes.NewBufferString(data.Encode()))
-		if err != nil {
-			return err
-		}
+		startTsmReg, _ := http.NewRequest("POST", "http://"+address+"/TAFJRestServices/resources/management/topic", bytes.NewBufferString(data.Encode()))
 		startTsmReg.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		startTsmReg.SetBasicAuth(tafjSecret.User, tafjSecret.Password)
 		tsmRes, err := client.Do(startTsmReg)
@@ -140,7 +125,7 @@ func ProcessTsm(command string, address string, timeout int, ofsSecret *config.S
 		if tsmRes.StatusCode != 200 {
 			bodyBytes, err := io.ReadAll(tsmRes.Body)
 			if err != nil {
-				return fmt.Errorf("error reading response body for tsm start: %v", err)
+				return errors.New("error reading response body for tsm start: " + err.Error())
 			}
 			return fmt.Errorf("request for tsm start returned status code %v with body %s", res.StatusCode, string(bodyBytes))
 		}
@@ -156,7 +141,7 @@ func ProcessTsm(command string, address string, timeout int, ofsSecret *config.S
 			err = json.NewDecoder(res.Body).Decode(&sessionsResp)
 			res.Body.Close()
 			if err != nil {
-				return err
+				return errors.New("error decoding sessions response" + err.Error())
 			}
 
 			if slices.IndexFunc(sessionsResp.Sessions, func(sessn SessionResponse) bool { return sessn.Background }) != -1 {
@@ -171,7 +156,7 @@ func ProcessTsm(command string, address string, timeout int, ofsSecret *config.S
 		if isStarted {
 			logger.Println("exit starting tsm")
 		} else {
-			return errors.New("tsm not started after " + fmt.Sprint(timeout))
+			return fmt.Errorf("tsm not started after %d", timeout)
 		}
 	}
 

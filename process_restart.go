@@ -17,15 +17,13 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 	restarts := db.Select()
 
 	var wg sync.WaitGroup
-	var processed []string
 	now := uint16(timeNow.Hour()*60 + timeNow.Minute())
 	for _, restart := range restarts {
 		if restart.Time == now {
 			wg.Go(func() {
 				runScript(&restart, outchans)
+				db.Delete(restart.Server)
 			})
-
-			processed = append(processed, restart.Server)
 		} else if restart.Time < now {
 			message := fmt.Sprintf("Skipped %s for %s at %v", restart.Command, restart.Server, restart.Time)
 			log.Println(message, "cause before now")
@@ -36,7 +34,7 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 				}
 			}
 
-			processed = append(processed, restart.Server)
+			db.Delete(restart.Server)
 		} else if restart.Time-now > 60 {
 			message := fmt.Sprintf("Skipped %s for %s at %v", restart.Command, restart.Server, restart.Time)
 			log.Println(message, "cause more than hour before command")
@@ -47,16 +45,10 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 				}
 			}
 
-			processed = append(processed, restart.Server)
+			db.Delete(restart.Server)
 		}
 	}
 
 	wg.Wait()
-	log.Println("scripts finished, deleting processed")
-	for _, processedServer := range processed {
-		err := db.Delete(processedServer)
-		if err != nil {
-			log.Println("error deleting from db", err)
-		}
-	}
+	log.Println("finished processing restarts")
 }

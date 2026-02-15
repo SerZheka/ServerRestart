@@ -11,7 +11,7 @@ import (
 func Example(linkConf *config.LinkMethods, output <-chan util.InOutMessage) {
 	for message := range output {
 		if (message.LinkMethod == nil || message.LinkMethod == linkConf) &&
-			(len(linkConf.Servers) == 0 || slices.Contains(linkConf.Servers, message.Server)) {
+			(message.Server == "" || slices.Contains(linkConf.Servers, message.Server)) {
 			log.Printf("Example: For %s received %s\n", message.Server, message.Message)
 		}
 	}

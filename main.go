@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 	"os"
+	"path/filepath"
 	"slices"
 	"sync"
-	"time"
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/serzheka/serverrestart/config"
@@ -21,10 +21,13 @@ import (
 var (
 	inputFunctions = map[string]func(context.Context, *config.LinkMethods, chan<- util.InOutMessage){
 		"example": input.Example,
+		"tg":      input.Tg,
 	}
 	outputFunctions = map[string]func(*config.LinkMethods, <-chan util.InOutMessage){
 		"console": output.Console,
 		"example": output.Example,
+		"tg":      output.Tg,
+		"teams":   output.Teams,
 	}
 )
 
@@ -32,7 +35,11 @@ func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
 	log.Println("Starting components deployment")
 
-	db, err := pkgDb.NewDB("serverrestart.db")
+	executablePath, err := os.Executable()
+	if err != nil {
+		log.Panicln(err)
+	}
+	db, err := pkgDb.NewDB(filepath.Dir(executablePath) + "/serverrestart.db")
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -113,7 +120,7 @@ func main() {
 	log.Println("Process input started")
 
 	scheduler.NewJob(
-		gocron.DurationJob(time.Minute),
+		gocron.CronJob(`0 * * * *`, false),
 		gocron.NewTask(func() {
 			processRestart(db, sendOutputChans)
 		}),
@@ -166,20 +173,13 @@ func loadProjectLinks(entries *[]os.DirEntry) ([]*config.LinkMethods, []*config.
 			}
 		}
 		for _, link := range projectConfig.InOutLinks {
-			newconf := config.LinkMethods{
-				Name:    link.Name,
-				Key:     link.Key,
-				Servers: projectConfig.Servers,
-			}
-			inputLinks = append(inputLinks, &newconf)
-			outLinks = append(outLinks, &newconf)
+			link.Servers = projectConfig.Servers
+			inputLinks = append(inputLinks, &link)
+			outLinks = append(outLinks, &link)
 		}
 		for _, link := range projectConfig.OutLinks {
-			outLinks = append(outLinks, &config.LinkMethods{
-				Name:    link.Name,
-				Key:     link.Key,
-				Servers: projectConfig.Servers,
-			})
+			link.Servers = projectConfig.Servers
+			outLinks = append(outLinks, &link)
 		}
 	}
 

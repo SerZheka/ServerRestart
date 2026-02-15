@@ -26,5 +26,7 @@ scripts:
 ## ToDo
 
 * limits for different handlers (only start, not NOW...)
-* in http request check for wrong status code, not all errors must crash
-* instant actions at NOW
+  * **this is achieved through adding to `projects.yaml` `type` and `actions` of in&out handlers**
+* reply to message for in&out handlers
+* preserve chat id for in&out handlers (inside db ?)
+* check actions before adding to scheduler
