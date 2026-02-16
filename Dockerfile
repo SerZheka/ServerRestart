@@ -20,8 +20,7 @@ RUN adduser \
     --shell "/sbin/nologin" \
     --no-create-home \
     --uid "${UID}" \
-    appuser \
-    && chmod a+w /bin
+    appuser
 USER appuser
 COPY --from=build /bin/main /bin/
 ENTRYPOINT [ "/bin/main" ]

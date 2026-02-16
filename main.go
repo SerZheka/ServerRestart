@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"path/filepath"
 	"slices"
 	"sync"
 
@@ -35,11 +34,7 @@ func main() {
 	log.SetFlags(log.Flags() | log.Lshortfile)
 	log.Println("Starting components deployment")
 
-	executablePath, err := os.Executable()
-	if err != nil {
-		log.Panicln(err)
-	}
-	db, err := pkgDb.NewDB(filepath.Dir(executablePath) + "/serverrestart.db")
+	db, err := pkgDb.NewDB(config.ConfigPath + "/serverrestart.db")
 	if err != nil {
 		log.Panicln(err)
 	}
