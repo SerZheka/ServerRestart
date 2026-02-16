@@ -115,7 +115,7 @@ func main() {
 	log.Println("Process input started")
 
 	scheduler.NewJob(
-		gocron.CronJob(`0 * * * *`, false),
+		gocron.CronJob(`* * * * *`, false),
 		gocron.NewTask(func() {
 			processRestart(db, sendOutputChans)
 		}),
