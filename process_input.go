@@ -98,6 +98,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 		}
 
 		if values[2] == "now" {
+			db.Lock(restart.Server)
 			msg := fmt.Sprintf("Processing %s for server %s NOW", values[0], values[1])
 			log.Println(msg)
 			for _, o := range output {

@@ -15,11 +15,12 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 	log.Println("started processing restarts at", timeNow.Format("15:04"))
 
 	restarts := db.Select()
-
+	log.Println("got restarts", restarts)
 	var wg sync.WaitGroup
 	now := uint16(timeNow.Hour()*60 + timeNow.Minute())
 	for _, restart := range restarts {
 		if restart.Time == now {
+			db.Lock(restart.Server)
 			wg.Go(func() {
 				runScript(&restart, outchans)
 				db.Delete(restart.Server)
@@ -50,5 +51,5 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 	}
 
 	wg.Wait()
-	log.Println("finished processing restarts")
+	log.Println("finished processing restarts from", timeNow.Format("15:04"))
 }

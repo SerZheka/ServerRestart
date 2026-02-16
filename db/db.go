@@ -21,6 +21,7 @@ type Restart struct {
 	Server  string
 	Command string
 	Time    uint16 // Amount of minutes from day start
+	locked  bool
 }
 
 const (
@@ -103,7 +104,23 @@ func (db *DB) findIndex(server string) int {
 }
 
 func (db *DB) Select() []Restart {
-	return db.buffer
+	result := make([]Restart, 0, len(db.buffer))
+	for _, restart := range db.buffer {
+		if !restart.locked {
+			result = append(result, restart)
+		}
+	}
+
+	return result
+}
+
+func (db *DB) Lock(server string) error {
+	if index := db.findIndex(server); index != -1 {
+		db.buffer[index].locked = true
+		return nil
+	}
+
+	return errors.New("cannot find record" + server)
 }
 
 func (db *DB) Delete(server string) error {

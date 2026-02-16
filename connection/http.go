@@ -74,7 +74,8 @@ func ProcessTsm(command, address string, timeout int, ofsSecret, tafjSecret *con
 		}
 		logger.Println("ofs request for TSM stop successfully sent")
 
-		for range timeout {
+		for attempt := range timeout {
+			logger.Println("waiting for TSM to stop, attempt", attempt)
 			res, err := client.Do(sessionsReq)
 			if err != nil {
 				return err
@@ -132,7 +133,8 @@ func ProcessTsm(command, address string, timeout int, ofsSecret, tafjSecret *con
 		logger.Println("START.TSM successfully sent")
 
 		var isStarted bool
-		for range timeout {
+		for attempt := range timeout {
+			logger.Println("waiting for TSM to start, attempt", attempt)
 			res, err := client.Do(sessionsReq)
 			if err != nil {
 				return err
