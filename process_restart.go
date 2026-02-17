@@ -23,7 +23,7 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 			db.Lock(restart.Server)
 			wg.Go(func() {
 				runScript(&restart, outchans)
-				db.Delete(restart.Server)
+				db.DeleteWithLocked(restart.Server)
 			})
 		} else if restart.Time < now {
 			message := fmt.Sprintf("Skipped %s for %s at %v", restart.Command, restart.Server, restart.Time)
@@ -32,10 +32,11 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 				outchan <- util.InOutMessage{
 					Message: message,
 					Server:  restart.Server,
+					ChatId:  restart.ChatId,
 				}
 			}
 
-			db.Delete(restart.Server)
+			db.DeleteWithLocked(restart.Server)
 		} else if restart.Time-now > 60 {
 			message := fmt.Sprintf("Skipped %s for %s at %v", restart.Command, restart.Server, restart.Time)
 			log.Println(message, "cause more than hour before command")
@@ -43,10 +44,11 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 				outchan <- util.InOutMessage{
 					Message: message,
 					Server:  restart.Server,
+					ChatId:  restart.ChatId,
 				}
 			}
 
-			db.Delete(restart.Server)
+			db.DeleteWithLocked(restart.Server)
 		}
 	}
 

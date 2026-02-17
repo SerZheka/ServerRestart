@@ -29,13 +29,12 @@ func Tg(linkConf *config.LinkMethods, output <-chan util.InOutMessage) {
 			(message.Server == "" || slices.Contains(linkConf.Servers, message.Server)) {
 			log.Printf("Tg %s: For %s received %s\n", botName.Name, message.Server, message.Message)
 
-			if linkConf.ChatId == 0 {
-				log.Println("chat id is not set")
-			} else {
-				tgbot.SendMessage(context.TODO(), &bot.SendMessageParams{
-					ChatID: linkConf.ChatId,
-					Text:   message.Message,
-				})
+			_, err = tgbot.SendMessage(context.TODO(), &bot.SendMessageParams{
+				ChatID: message.ChatId,
+				Text:   message.Message,
+			})
+			if err != nil {
+				log.Println("error sending message to ", botName.Name, err)
 			}
 		}
 	}

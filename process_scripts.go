@@ -26,6 +26,7 @@ func runScript(restart *packdb.Restart, output []chan<- util.InOutMessage) {
 		outchan <- util.InOutMessage{
 			Message: startMessage,
 			Server:  restart.Server,
+			ChatId:  restart.ChatId,
 		}
 	}
 
@@ -106,6 +107,7 @@ func runScript(restart *packdb.Restart, output []chan<- util.InOutMessage) {
 				outchan <- util.InOutMessage{
 					Message: script.Message,
 					Server:  restart.Server,
+					ChatId:  restart.ChatId,
 				}
 			}
 		}

@@ -22,9 +22,6 @@ func Tg(ctx context.Context, linkConf *config.LinkMethods, output chan<- util.In
 		bot.WithDefaultHandler(func(ctx context.Context, b *bot.Bot, update *models.Update) {
 			if update.Message != nil && update.Message.Text != "" {
 				logger.Println("Received:", update.Message.Text)
-				if linkConf != nil {
-					linkConf.ChatId = update.Message.Chat.ID
-				}
 
 				text := strings.ReplaceAll(update.Message.Text, "_", " ")[1:]
 				if atIndex := strings.Index(text, "@"); atIndex != -1 {
@@ -39,7 +36,7 @@ func Tg(ctx context.Context, linkConf *config.LinkMethods, output chan<- util.In
 						textToSend += ";+10/10"
 					}
 					logger.Println("Sending to output", textToSend)
-					output <- util.InOutMessage{Message: textToSend, LinkMethod: linkConf}
+					output <- util.InOutMessage{Message: textToSend, LinkMethod: linkConf, ChatId: update.Message.Chat.ID}
 				}
 			}
 		}),

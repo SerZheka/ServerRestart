@@ -21,6 +21,7 @@ type Restart struct {
 	Server  string
 	Command string
 	Time    uint16 // Amount of minutes from day start
+	ChatId  int64
 	locked  bool
 }
 
@@ -29,17 +30,18 @@ const (
 	CREATE TABLE IF NOT EXISTS restart (
 		server VARCHAR(32) PRIMARY KEY,
 		command VARCHAR(32),
-		time INTEGER
+		time INTEGER,
+		chat_id INTEGER
 	);`
 
 	insertSQL = `
 	INSERT INTO restart (
-		server, command, time
+		server, command, time, chat_id
 	) VALUES (
-		?, ?, ?
+		?, ?, ?, ?
 	);`
 
-	selectSql = "SELECT server, command, time FROM restart;"
+	selectSql = "SELECT server, command, time, chat_id FROM restart;"
 
 	clearSql = "DELETE FROM restart;"
 )
@@ -61,7 +63,7 @@ func NewDB(dbFile string) (*DB, error) {
 	restarts := make([]Restart, 0, 5)
 	for rows.Next() {
 		restart := Restart{}
-		err := rows.Scan(&restart.Server, &restart.Command, &restart.Time)
+		err := rows.Scan(&restart.Server, &restart.Command, &restart.Time, &restart.ChatId)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -125,6 +127,9 @@ func (db *DB) Lock(server string) error {
 
 func (db *DB) Delete(server string) error {
 	if index := db.findIndex(server); index != -1 {
+		if db.buffer[index].locked {
+			return errors.New("cannot delete locked record" + server)
+		}
 		db.buffer = slices.Delete(db.buffer, index, index+1)
 		return nil
 	}
@@ -132,8 +137,13 @@ func (db *DB) Delete(server string) error {
 	return errors.New("cannot find record" + server)
 }
 
-func (db *DB) Clear() {
-	db.buffer = db.buffer[:0]
+func (db *DB) DeleteWithLocked(server string) error {
+	if index := db.findIndex(server); index != -1 {
+		db.buffer = slices.Delete(db.buffer, index, index+1)
+		return nil
+	}
+
+	return errors.New("cannot find record" + server)
 }
 
 func (db *DB) Close() error {
@@ -152,7 +162,7 @@ func (db *DB) Close() error {
 	defer addStmt.Close()
 
 	for _, restart := range db.buffer {
-		_, err := tx.Stmt(addStmt).Exec(restart.Server, restart.Command, restart.Time)
+		_, err := tx.Stmt(addStmt).Exec(restart.Server, restart.Command, restart.Time, restart.ChatId)
 		if err != nil {
 			tx.Rollback()
 			return err

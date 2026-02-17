@@ -11,9 +11,8 @@ type ProjectConfig struct {
 }
 
 type LinkMethods struct {
-	Name    string `yaml:"name"`
-	Key     string `yaml:"key"`
-	ChatId  int64
+	Name    string   `yaml:"name"`
+	Key     string   `yaml:"key"`
 	Servers []string // duplicate for processing in input & output
 }
 

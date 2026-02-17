@@ -10,6 +10,7 @@ import (
 type InOutMessage struct {
 	Message    string
 	Server     string
+	ChatId     int64
 	LinkMethod *config.LinkMethods
 }
 
@@ -19,6 +20,7 @@ func SendErrMessages(output []chan<- InOutMessage, restartInfo *packdb.Restart) 
 		outchan <- InOutMessage{
 			Message: message,
 			Server:  restartInfo.Server,
+			ChatId:  restartInfo.ChatId,
 		}
 	}
 }

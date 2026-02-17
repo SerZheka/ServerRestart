@@ -29,6 +29,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 				o <- util.InOutMessage{
 					Message:    "Wrong size for input message",
 					LinkMethod: inputmsg.LinkMethod,
+					ChatId:     inputmsg.ChatId,
 				}
 			}
 			continue
@@ -40,6 +41,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 				o <- util.InOutMessage{
 					Message:    "Server not found in config",
 					LinkMethod: inputmsg.LinkMethod,
+					ChatId:     inputmsg.ChatId,
 				}
 			}
 			continue
@@ -52,6 +54,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 				o <- util.InOutMessage{
 					Message:    "Error parsing time",
 					LinkMethod: inputmsg.LinkMethod,
+					ChatId:     inputmsg.ChatId,
 				}
 			}
 			continue
@@ -65,6 +68,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 					o <- util.InOutMessage{
 						Message:    "Action is not planned",
 						LinkMethod: inputmsg.LinkMethod,
+						ChatId:     inputmsg.ChatId,
 					}
 				}
 				continue
@@ -75,6 +79,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 				o <- util.InOutMessage{
 					Message: msg,
 					Server:  values[1],
+					ChatId:  inputmsg.ChatId,
 				}
 			}
 			continue
@@ -84,6 +89,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 			Server:  values[1],
 			Command: strings.ToLower(values[0]),
 			Time:    timeMinutes,
+			ChatId:  inputmsg.ChatId,
 		}
 		err = db.Add(restart)
 		if err != nil {
@@ -92,6 +98,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 				o <- util.InOutMessage{
 					Message:    "Error adding to db",
 					LinkMethod: inputmsg.LinkMethod,
+					ChatId:     restart.ChatId,
 				}
 			}
 			continue
@@ -105,12 +112,13 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 				o <- util.InOutMessage{
 					Message: msg,
 					Server:  values[1],
+					ChatId:  restart.ChatId,
 				}
 			}
 
 			wg.Go(func() {
 				runScript(&restart, output)
-				db.Delete(restart.Server)
+				db.DeleteWithLocked(restart.Server)
 			})
 		} else {
 			msg := fmt.Sprintf("Planned %s for server %s at %v", values[0], values[1], timeString)
@@ -119,6 +127,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 				o <- util.InOutMessage{
 					Message: msg,
 					Server:  values[1],
+					ChatId:  restart.ChatId,
 				}
 			}
 		}

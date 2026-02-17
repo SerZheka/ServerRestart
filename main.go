@@ -43,10 +43,6 @@ func main() {
 	if err != nil {
 		log.Panicln(err)
 	}
-	if slices.ContainsFunc(entries, func(entry os.DirEntry) bool { return entry.Name() == "clearRestarts" }) {
-		db.Clear()
-		os.Remove(config.ConfigPath + "/clearRestarts")
-	}
 	os.MkdirAll(config.ConfigPath+"/logs", os.ModePerm)
 
 	inputLinks, outputLinks := loadProjectLinks(&entries)
