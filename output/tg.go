@@ -11,7 +11,13 @@ import (
 )
 
 func Tg(linkConf *config.LinkMethods, output <-chan util.InOutMessage) {
-	log.Println("starting tg output for servers", linkConf.Servers)
+	{
+		servers := make([]string, 0, len(linkConf.ServerCommands))
+		for _, server := range linkConf.ServerCommands {
+			servers = append(servers, server.Server)
+		}
+		log.Println("starting tg output for servers", servers)
+	}
 	tgbot, err := bot.New(linkConf.Key)
 	if err != nil {
 		log.Println("error creating tg bot", err)
@@ -26,7 +32,8 @@ func Tg(linkConf *config.LinkMethods, output <-chan util.InOutMessage) {
 
 	for message := range output {
 		if (message.LinkMethod == nil || message.LinkMethod == linkConf) &&
-			(message.Server == "" || slices.Contains(linkConf.Servers, message.Server)) {
+			(message.Server == "" || slices.ContainsFunc(linkConf.ServerCommands,
+				func(serv config.ServerCommand) bool { return serv.Server == message.Server })) {
 			log.Printf("Tg %s: For %s received %s\n", botName.Name, message.Server, message.Message)
 
 			_, err = tgbot.SendMessage(context.TODO(), &bot.SendMessageParams{

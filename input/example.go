@@ -10,10 +10,10 @@ import (
 )
 
 func Example(ctx context.Context, linkConf *config.LinkMethods, output chan<- util.InOutMessage) {
-	log.Println("sending restart request for", linkConf.Servers[0])
+	log.Println("sending restart request for", linkConf.ServerCommands[0].Server)
 	restartTime := time.Now().Add(time.Minute).Format("15:04")
 	output <- util.InOutMessage{
-		Message:    "restart;" + linkConf.Servers[0] + ";" + restartTime,
+		Message:    "restart;" + linkConf.ServerCommands[0].Server + ";" + restartTime,
 		LinkMethod: linkConf,
 	}
 }

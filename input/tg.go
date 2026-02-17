@@ -14,7 +14,13 @@ import (
 
 func Tg(ctx context.Context, linkConf *config.LinkMethods, output chan<- util.InOutMessage) {
 	logger := log.New(log.Writer(), "TG INPUT:", log.Flags()|log.Lmsgprefix)
-	logger.Println("starting tg bot for servers", linkConf.Servers)
+	{
+		servers := make([]string, 0, len(linkConf.ServerCommands))
+		for _, server := range linkConf.ServerCommands {
+			servers = append(servers, server.Server)
+		}
+		log.Println("starting tg bot for servers", servers)
+	}
 
 	serverReg := regexp.MustCompile(`[ ]\d{1,3}[ .]\d{1,3}(?: |$)`)
 	opts := []bot.Option{
@@ -59,8 +65,8 @@ func Tg(ctx context.Context, linkConf *config.LinkMethods, output chan<- util.In
 		{Command: "start", Description: "start bot"},
 		{Command: "help", Description: "help"},
 	}
-	for _, serverId := range linkConf.Servers {
-		tgServerId := strings.Replace(serverId, ".", "_", 1)
+	for _, serverCommand := range linkConf.ServerCommands {
+		tgServerId := strings.Replace(serverCommand.Server, ".", "_", 1)
 		botCommands = append(botCommands,
 			models.BotCommand{Command: "restart_" + tgServerId, Description: "restart server in 10 min"},
 			models.BotCommand{Command: "restart_jboss_" + tgServerId, Description: "restart jboss in 10 min"},

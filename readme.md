@@ -28,7 +28,5 @@ scripts:
 ## ToDo
 
 * limits for different handlers (only start, not NOW...)
-  * **this is achieved through adding to `projects.yaml` `type` and `actions` of in&out handlers**
+  * **this is achieved through adding to `projects.yaml` `minTime` and `actions` of in&out handlers**
 * reply to message for in&out handlers
-* preserve chat id for in&out handlers (inside db ?)
-* check actions before adding to scheduler

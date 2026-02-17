@@ -39,13 +39,9 @@ func main() {
 		log.Panicln(err)
 	}
 
-	entries, err := os.ReadDir(config.ConfigPath)
-	if err != nil {
-		log.Panicln(err)
-	}
 	os.MkdirAll(config.ConfigPath+"/logs", os.ModePerm)
 
-	inputLinks, outputLinks := loadProjectLinks(&entries)
+	inputLinks, outputLinks := loadProjectLinks()
 	var wg, wgin, wgout sync.WaitGroup
 	ctx, cancel := context.WithCancel(context.Background())
 	scheduler, err := gocron.NewScheduler()
@@ -135,7 +131,7 @@ func main() {
 	closer.Hold()
 }
 
-func loadProjectLinks(entries *[]os.DirEntry) ([]*config.LinkMethods, []*config.LinkMethods) {
+func loadProjectLinks() ([]*config.LinkMethods, []*config.LinkMethods) {
 	projectConfigBytes, err := os.ReadFile(config.ConfigPath + "/projects.yaml")
 	if err != nil {
 		log.Panicln(err)
@@ -158,18 +154,34 @@ func loadProjectLinks(entries *[]os.DirEntry) ([]*config.LinkMethods, []*config.
 		}
 
 		projectNames = append(projectNames, name)
+		var serverCommands []config.ServerCommand
 		for _, server := range projectConfig.Servers {
-			if serverFile := server + ".yaml"; !slices.ContainsFunc(*entries, func(entry os.DirEntry) bool { return entry.Name() == serverFile }) {
-				log.Panicln("Config directory does not contain config for " + server + " which is needed for project " + name)
+			serverFile := server + ".yaml"
+			bytes, err := os.ReadFile(config.ConfigPath + "/" + serverFile)
+			if err != nil {
+				log.Panicf("error reading %s (project %s): %v", serverFile, name, err)
 			}
+			var serverConf config.ServerConfig
+			err = yaml.Unmarshal(bytes, &serverConf)
+			if err != nil {
+				log.Panicf("error unmarshalling %s (project %s): %v", serverFile, name, err)
+			}
+			commands := make([]string, 0, len(serverConf.Commands))
+			for _, command := range serverConf.Commands {
+				commands = append(commands, command.Name)
+			}
+			serverCommands = append(serverCommands, config.ServerCommand{
+				Server:   server,
+				Commands: commands,
+			})
 		}
 		for _, link := range projectConfig.InOutLinks {
-			link.Servers = projectConfig.Servers
+			link.ServerCommands = serverCommands
 			inputLinks = append(inputLinks, &link)
 			outLinks = append(outLinks, &link)
 		}
 		for _, link := range projectConfig.OutLinks {
-			link.Servers = projectConfig.Servers
+			link.ServerCommands = serverCommands
 			outLinks = append(outLinks, &link)
 		}
 	}

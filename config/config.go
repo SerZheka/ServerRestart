@@ -11,9 +11,14 @@ type ProjectConfig struct {
 }
 
 type LinkMethods struct {
-	Name    string   `yaml:"name"`
-	Key     string   `yaml:"key"`
-	Servers []string // duplicate for processing in input & output
+	Name           string          `yaml:"name"`
+	Key            string          `yaml:"key"`
+	ServerCommands []ServerCommand // duplicate for checks in input & output
+}
+
+type ServerCommand struct {
+	Server   string
+	Commands []string
 }
 
 type ServerConfig struct {

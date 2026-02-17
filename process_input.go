@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/serzheka/serverrestart/config"
 	packdb "github.com/serzheka/serverrestart/db"
 	"github.com/serzheka/serverrestart/util"
 )
@@ -35,11 +36,25 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 			continue
 		}
 
-		if !slices.Contains(inputmsg.LinkMethod.Servers, values[1]) {
+		serverIndex := slices.IndexFunc(inputmsg.LinkMethod.ServerCommands,
+			func(serv config.ServerCommand) bool { return serv.Server == values[1] })
+		if serverIndex == -1 {
 			log.Println("server not found in config", values[1])
 			for _, o := range output {
 				o <- util.InOutMessage{
 					Message:    "Server not found in config",
+					LinkMethod: inputmsg.LinkMethod,
+					ChatId:     inputmsg.ChatId,
+				}
+			}
+			continue
+		}
+		command := strings.ToLower(values[0])
+		if !slices.Contains(inputmsg.LinkMethod.ServerCommands[serverIndex].Commands, command) {
+			log.Println("command not found in config", command)
+			for _, o := range output {
+				o <- util.InOutMessage{
+					Message:    "Command not found in config",
 					LinkMethod: inputmsg.LinkMethod,
 					ChatId:     inputmsg.ChatId,
 				}
@@ -74,7 +89,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 			continue
 		}
 
-		if values[0] == "cancel" {
+		if command == "cancel" {
 			err := db.Delete(values[1])
 			if err != nil {
 				log.Println("action is not planned:", err)
@@ -101,7 +116,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 
 		restart := packdb.Restart{
 			Server:  values[1],
-			Command: strings.ToLower(values[0]),
+			Command: command,
 			Time:    timeMinutes,
 			ChatId:  inputmsg.ChatId,
 		}
@@ -120,7 +135,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 
 		if values[2] == "now" {
 			db.Lock(restart.Server)
-			msg := fmt.Sprintf("Processing %s for server %s NOW", values[0], values[1])
+			msg := fmt.Sprintf("Processing %s for server %s NOW", command, values[1])
 			log.Println(msg)
 			for _, o := range output {
 				o <- util.InOutMessage{
@@ -135,7 +150,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 				db.DeleteWithLocked(restart.Server)
 			})
 		} else {
-			msg := fmt.Sprintf("Planned %s for server %s at %v", values[0], values[1], timeString)
+			msg := fmt.Sprintf("Planned %s for server %s at %v", command, values[1], timeString)
 			log.Println(msg)
 			for _, o := range output {
 				o <- util.InOutMessage{
