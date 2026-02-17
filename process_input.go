@@ -47,12 +47,26 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 			continue
 		}
 
-		timeString, timeMinutes, err := parseTime(values[2])
+		timeNow := time.Now()
+		timeString, timeMinutes, err := parseTime(values[2], timeNow)
 		if err != nil {
 			log.Println("error parsing time:", err)
 			for _, o := range output {
 				o <- util.InOutMessage{
 					Message:    "Error parsing time",
+					LinkMethod: inputmsg.LinkMethod,
+					ChatId:     inputmsg.ChatId,
+				}
+			}
+			continue
+		}
+
+		if !util.CheckTime(timeMinutes, uint16(timeNow.Hour()*60+timeNow.Minute())) {
+			msg := "Time is in the past or too far in the future"
+			log.Println(msg)
+			for _, o := range output {
+				o <- util.InOutMessage{
+					Message:    msg,
 					LinkMethod: inputmsg.LinkMethod,
 					ChatId:     inputmsg.ChatId,
 				}
@@ -136,7 +150,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 	wg.Wait()
 }
 
-func parseTime(possiblyTime string) (string, uint16, error) {
+func parseTime(possiblyTime string, now time.Time) (string, uint16, error) {
 	if possiblyTime == "now" {
 		return "now", 0, nil
 	}
@@ -149,6 +163,9 @@ func parseTime(possiblyTime string) (string, uint16, error) {
 		parsed, err := time.Parse("15:4", groups[1])
 		if err != nil {
 			return "", 0, err
+		}
+		if now.Hour() == parsed.Hour() && now.Minute() == parsed.Minute() {
+			return "now", 0, nil
 		}
 		return parsed.Format("15:04"), uint16(parsed.Hour()*60 + parsed.Minute()), nil
 	}
@@ -169,5 +186,8 @@ func parseTime(possiblyTime string) (string, uint16, error) {
 		}
 	}
 
+	if now.Hour() == result.Hour() && now.Minute() == result.Minute() {
+		return "now", 0, nil
+	}
 	return result.Format("15:04"), uint16(result.Hour()*60 + result.Minute()), nil
 }

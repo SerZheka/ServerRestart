@@ -25,21 +25,9 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 				runScript(&restart, outchans)
 				db.DeleteWithLocked(restart.Server)
 			})
-		} else if restart.Time < now {
+		} else if !util.CheckTime(restart.Time, now) {
 			message := fmt.Sprintf("Skipped %s for %s at %v", restart.Command, restart.Server, restart.Time)
-			log.Println(message, "cause before now")
-			for _, outchan := range outchans {
-				outchan <- util.InOutMessage{
-					Message: message,
-					Server:  restart.Server,
-					ChatId:  restart.ChatId,
-				}
-			}
-
-			db.DeleteWithLocked(restart.Server)
-		} else if restart.Time-now > 60 {
-			message := fmt.Sprintf("Skipped %s for %s at %v", restart.Command, restart.Server, restart.Time)
-			log.Println(message, "cause more than hour before command")
+			log.Println(message)
 			for _, outchan := range outchans {
 				outchan <- util.InOutMessage{
 					Message: message,
