@@ -10,8 +10,6 @@ RUN --mount=type=cache,target=/go/pkg/mod/ \
     CGO_ENABLED=0 go build -o /bin/main .
 
 FROM alpine:latest AS final
-RUN --mount=type=cache,target=/var/cache/apk \
-    apk --update add tzdata
 ARG UID=10001
 RUN adduser \
     --disabled-password \
