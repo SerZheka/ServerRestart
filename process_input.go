@@ -166,8 +166,9 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 }
 
 func parseTime(possiblyTime string, now time.Time) (string, uint16, error) {
+	nowMinutes := uint16(now.Hour()*60 + now.Minute())
 	if possiblyTime == "now" {
-		return "now", 0, nil
+		return "now", nowMinutes, nil
 	}
 	groups := timeRegex.FindStringSubmatch(possiblyTime)
 	if len(groups) == 0 {
@@ -180,7 +181,7 @@ func parseTime(possiblyTime string, now time.Time) (string, uint16, error) {
 			return "", 0, err
 		}
 		if now.Hour() == parsed.Hour() && now.Minute() == parsed.Minute() {
-			return "now", 0, nil
+			return "now", nowMinutes, nil
 		}
 		return parsed.Format("15:04"), uint16(parsed.Hour()*60 + parsed.Minute()), nil
 	}
@@ -202,7 +203,7 @@ func parseTime(possiblyTime string, now time.Time) (string, uint16, error) {
 	}
 
 	if now.Hour() == result.Hour() && now.Minute() == result.Minute() {
-		return "now", 0, nil
+		return "now", nowMinutes, nil
 	}
 	return result.Format("15:04"), uint16(result.Hour()*60 + result.Minute()), nil
 }

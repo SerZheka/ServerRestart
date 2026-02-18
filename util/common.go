@@ -27,7 +27,7 @@ func SendErrMessages(output []chan<- InOutMessage, restartInfo *packdb.Restart) 
 
 // CheckTime checks if restart time is within 60 minutes from now
 func CheckTime(restartTime uint16, now uint16) bool {
-	if restartTime > now {
+	if restartTime >= now {
 		return restartTime-now <= 60
 	}
 
