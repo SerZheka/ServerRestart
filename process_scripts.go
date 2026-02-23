@@ -24,9 +24,10 @@ func runScript(restart *packdb.Restart, output []chan<- util.InOutMessage) {
 	log.Println(startMessage)
 	for _, outchan := range output {
 		outchan <- util.InOutMessage{
-			Message: startMessage,
-			Server:  restart.Server,
-			ChatId:  restart.ChatId,
+			Message:   startMessage,
+			Server:    restart.Server,
+			ChatId:    restart.ChatId,
+			ReplyToId: restart.ReplyToId,
 		}
 	}
 
@@ -105,9 +106,10 @@ func runScript(restart *packdb.Restart, output []chan<- util.InOutMessage) {
 		if script.Message != "" {
 			for _, outchan := range output {
 				outchan <- util.InOutMessage{
-					Message: script.Message,
-					Server:  restart.Server,
-					ChatId:  restart.ChatId,
+					Message:   script.Message,
+					Server:    restart.Server,
+					ChatId:    restart.ChatId,
+					ReplyToId: restart.ReplyToId,
 				}
 			}
 		}

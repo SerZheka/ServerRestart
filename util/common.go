@@ -11,6 +11,7 @@ type InOutMessage struct {
 	Message    string
 	Server     string
 	ChatId     int64
+	ReplyToId  int
 	LinkMethod *config.LinkMethods
 }
 
@@ -18,9 +19,10 @@ func SendErrMessages(output []chan<- InOutMessage, restartInfo *packdb.Restart) 
 	message := fmt.Sprintf("Error processing %s for server %s. Please see server logs", restartInfo.Command, restartInfo.Server)
 	for _, outchan := range output {
 		outchan <- InOutMessage{
-			Message: message,
-			Server:  restartInfo.Server,
-			ChatId:  restartInfo.ChatId,
+			Message:   message,
+			Server:    restartInfo.Server,
+			ChatId:    restartInfo.ChatId,
+			ReplyToId: restartInfo.ReplyToId,
 		}
 	}
 }

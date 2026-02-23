@@ -42,7 +42,12 @@ func Tg(ctx context.Context, linkConf *config.LinkMethods, output chan<- util.In
 						textToSend += ";+10/10"
 					}
 					logger.Println("Sending to output", textToSend)
-					output <- util.InOutMessage{Message: textToSend, LinkMethod: linkConf, ChatId: update.Message.Chat.ID}
+					output <- util.InOutMessage{
+						Message:    textToSend,
+						LinkMethod: linkConf,
+						ChatId:     update.Message.Chat.ID,
+						ReplyToId:  update.Message.ID,
+					}
 				}
 			}
 		}),

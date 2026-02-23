@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"github.com/serzheka/serverrestart/config"
 	"github.com/serzheka/serverrestart/util"
 )
@@ -37,8 +38,9 @@ func Tg(linkConf *config.LinkMethods, output <-chan util.InOutMessage) {
 			log.Printf("Tg %s: For %s received %s\n", botName.Name, message.Server, message.Message)
 
 			_, err = tgbot.SendMessage(context.TODO(), &bot.SendMessageParams{
-				ChatID: message.ChatId,
-				Text:   message.Message,
+				ChatID:          message.ChatId,
+				Text:            message.Message,
+				ReplyParameters: &models.ReplyParameters{MessageID: message.ReplyToId},
 			})
 			if err != nil {
 				log.Println("error sending message to ", botName.Name, err)

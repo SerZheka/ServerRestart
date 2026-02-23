@@ -18,11 +18,12 @@ type DB struct {
 }
 
 type Restart struct {
-	Server  string
-	Command string
-	Time    uint16 // Amount of minutes from day start
-	ChatId  int64
-	locked  bool
+	Server    string
+	Command   string
+	Time      uint16 // Amount of minutes from day start
+	ChatId    int64
+	ReplyToId int
+	locked    bool
 }
 
 const (
@@ -31,17 +32,18 @@ const (
 		server VARCHAR(32) PRIMARY KEY,
 		command VARCHAR(32),
 		time INTEGER,
-		chat_id INTEGER
+		chat_id INTEGER,
+		reply_to_id INTEGER
 	);`
 
 	insertSQL = `
 	INSERT INTO restart (
-		server, command, time, chat_id
+		server, command, time, chat_id, reply_to_id
 	) VALUES (
-		?, ?, ?, ?
+		?, ?, ?, ?, ?
 	);`
 
-	selectSql = "SELECT server, command, time, chat_id FROM restart;"
+	selectSql = "SELECT server, command, time, chat_id, reply_to_id FROM restart;"
 
 	clearSql = "DELETE FROM restart;"
 )
@@ -63,7 +65,7 @@ func NewDB(dbFile string) (*DB, error) {
 	restarts := make([]Restart, 0, 5)
 	for rows.Next() {
 		restart := Restart{}
-		err := rows.Scan(&restart.Server, &restart.Command, &restart.Time, &restart.ChatId)
+		err := rows.Scan(&restart.Server, &restart.Command, &restart.Time, &restart.ChatId, &restart.ReplyToId)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -162,7 +164,7 @@ func (db *DB) Close() error {
 	defer addStmt.Close()
 
 	for _, restart := range db.buffer {
-		_, err := tx.Stmt(addStmt).Exec(restart.Server, restart.Command, restart.Time, restart.ChatId)
+		_, err := tx.Stmt(addStmt).Exec(restart.Server, restart.Command, restart.Time, restart.ChatId, restart.ReplyToId)
 		if err != nil {
 			tx.Rollback()
 			return err

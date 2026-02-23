@@ -30,9 +30,10 @@ func processRestart(db *packdb.DB, outchans []chan<- util.InOutMessage) {
 			log.Println(message)
 			for _, outchan := range outchans {
 				outchan <- util.InOutMessage{
-					Message: message,
-					Server:  restart.Server,
-					ChatId:  restart.ChatId,
+					Message:   message,
+					Server:    restart.Server,
+					ChatId:    restart.ChatId,
+					ReplyToId: restart.ReplyToId,
 				}
 			}
 

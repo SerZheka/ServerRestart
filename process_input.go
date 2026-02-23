@@ -31,6 +31,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 					Message:    "Wrong size for input message",
 					LinkMethod: inputmsg.LinkMethod,
 					ChatId:     inputmsg.ChatId,
+					ReplyToId:  inputmsg.ReplyToId,
 				}
 			}
 			continue
@@ -45,6 +46,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 					Message:    "Server not found in config",
 					LinkMethod: inputmsg.LinkMethod,
 					ChatId:     inputmsg.ChatId,
+					ReplyToId:  inputmsg.ReplyToId,
 				}
 			}
 			continue
@@ -57,6 +59,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 					Message:    "Command not found in config",
 					LinkMethod: inputmsg.LinkMethod,
 					ChatId:     inputmsg.ChatId,
+					ReplyToId:  inputmsg.ReplyToId,
 				}
 			}
 			continue
@@ -71,6 +74,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 					Message:    "Error parsing time",
 					LinkMethod: inputmsg.LinkMethod,
 					ChatId:     inputmsg.ChatId,
+					ReplyToId:  inputmsg.ReplyToId,
 				}
 			}
 			continue
@@ -84,6 +88,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 					Message:    msg,
 					LinkMethod: inputmsg.LinkMethod,
 					ChatId:     inputmsg.ChatId,
+					ReplyToId:  inputmsg.ReplyToId,
 				}
 			}
 			continue
@@ -98,6 +103,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 						Message:    "Action is not planned",
 						LinkMethod: inputmsg.LinkMethod,
 						ChatId:     inputmsg.ChatId,
+						ReplyToId:  inputmsg.ReplyToId,
 					}
 				}
 				continue
@@ -106,19 +112,21 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 			log.Println(msg)
 			for _, o := range output {
 				o <- util.InOutMessage{
-					Message: msg,
-					Server:  values[1],
-					ChatId:  inputmsg.ChatId,
+					Message:   msg,
+					Server:    values[1],
+					ChatId:    inputmsg.ChatId,
+					ReplyToId: inputmsg.ReplyToId,
 				}
 			}
 			continue
 		}
 
 		restart := packdb.Restart{
-			Server:  values[1],
-			Command: command,
-			Time:    timeMinutes,
-			ChatId:  inputmsg.ChatId,
+			Server:    values[1],
+			Command:   command,
+			Time:      timeMinutes,
+			ChatId:    inputmsg.ChatId,
+			ReplyToId: inputmsg.ReplyToId,
 		}
 		err = db.Add(restart)
 		if err != nil {
@@ -128,6 +136,7 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 					Message:    "Error adding to db",
 					LinkMethod: inputmsg.LinkMethod,
 					ChatId:     restart.ChatId,
+					ReplyToId:  inputmsg.ReplyToId,
 				}
 			}
 			continue
@@ -139,9 +148,10 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 			log.Println(msg)
 			for _, o := range output {
 				o <- util.InOutMessage{
-					Message: msg,
-					Server:  values[1],
-					ChatId:  restart.ChatId,
+					Message:   msg,
+					Server:    values[1],
+					ChatId:    restart.ChatId,
+					ReplyToId: inputmsg.ReplyToId,
 				}
 			}
 
@@ -154,9 +164,10 @@ func processInput(input <-chan util.InOutMessage, db *packdb.DB, output []chan<-
 			log.Println(msg)
 			for _, o := range output {
 				o <- util.InOutMessage{
-					Message: msg,
-					Server:  values[1],
-					ChatId:  restart.ChatId,
+					Message:   msg,
+					Server:    values[1],
+					ChatId:    restart.ChatId,
+					ReplyToId: inputmsg.ReplyToId,
 				}
 			}
 		}
